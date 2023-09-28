@@ -12,6 +12,10 @@ const app = express()
 
 app.use(express.json())
 
+app.get('/', (req, res) => {
+  res.send('OK')
+})
+
 app.post('/', async (req, res) => {
   const thingModelUrl = req.body['thing-model']
   const deviceId = req.headers['x-device-id']
