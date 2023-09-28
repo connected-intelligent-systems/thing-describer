@@ -31,7 +31,7 @@ app.post('/', async (req, res) => {
     credentials === undefined ||
     credentialsType === undefined
   ) {
-    return res.status(400).statusMessage('Bad Request')
+    return res.status(400).send('Bad Request')
   }
 
   try {
