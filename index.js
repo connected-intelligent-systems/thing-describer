@@ -7,7 +7,7 @@ const {
 } = require('./lib/thing_description_template')
 const { updateThing } = require('./lib/thing_registry')
 
-const Port = env.get('PORT').default('4444').required(true).asPortNumber()
+const Port = env.get('PORT').default('3000').required(true).asPortNumber()
 const app = express()
 
 app.use(express.json())
