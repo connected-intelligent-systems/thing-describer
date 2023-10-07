@@ -30,7 +30,10 @@ app.post('/', async (req, res) => {
   }
 
   try {
-    if (messageType === 'ATTRIBUTES_UPDATED') {
+    if (
+      messageType === 'ATTRIBUTES_UPDATED' ||
+      messageType === 'POST_ATTRIBUTES_REQUEST'
+    ) {
       if (
         thingModelUrl === undefined ||
         deviceId === undefined ||
@@ -48,7 +51,7 @@ app.post('/', async (req, res) => {
         credentials,
         credentialsType
       })
-      
+
       await updateThing(tenantName, thingDescription)
     } else if (messageType === 'ATTRIBUTES_DELETED') {
       if (deviceId === undefined || tenantName === undefined) {
@@ -68,6 +71,7 @@ app.post('/', async (req, res) => {
 
     res.send('OK')
   } catch (e) {
+    console.error(e)
     return res.status(500).send('Internal Server Error')
   }
 })

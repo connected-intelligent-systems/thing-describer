@@ -1,6 +1,6 @@
 # Thing Describer
 
-Generates thing descriptions of thingsboard devices using thing Mmdels
+Generates Thing Descriptions of thingsboard devices using Thing Models
 
 ## Authors
 
