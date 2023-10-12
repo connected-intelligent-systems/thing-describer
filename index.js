@@ -17,7 +17,15 @@ app.get('/', (req, res) => {
 })
 
 app.post('/', async (req, res) => {
-  const thingModelUrl = req.body['thing-model']
+  const thingModelUrl =
+    req.body['cs_thing-model'] ||
+    req.body['ss_thing-model'] ||
+    req.body['shared_thing-model']
+  const thingMetadata =
+    req.body['cs_thing-metadata'] ||
+    req.body['ss_thing-metadata'] ||
+    req.body['shared_thing-metadata'] ||
+    {}
   const deviceId = req.headers['x-device-id']
   const tenantName = req.headers['x-tenant-name']
   const credentials = req.headers['x-credentials']
@@ -49,7 +57,8 @@ app.post('/', async (req, res) => {
         thingModelUrl,
         tenantName,
         credentials,
-        credentialsType
+        credentialsType,
+        thingMetadata
       })
 
       await updateThing(tenantName, thingDescription)
