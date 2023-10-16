@@ -31,16 +31,20 @@ app.post('/', async (req, res) => {
   const credentials = req.headers['x-credentials']
   const credentialsType = req.headers['x-credentials-type']
   const messageType = req.headers['x-message-type']
-  // const tenantId = req.headers['x-tenant-id']
+  // const customerId = req.headers['x-customer-id']
+  const customerTitle = req.headers['x-customer-title'] || undefined
 
   if (messageType === undefined) {
     return res.status(400).send('Bad Request')
   }
 
+  // http://thing-describer.core.svc.cluster.local:3000/
   try {
     if (
       messageType === 'ATTRIBUTES_UPDATED' ||
-      messageType === 'POST_ATTRIBUTES_REQUEST'
+      messageType === 'POST_ATTRIBUTES_REQUEST' ||
+      messageType === 'ENTITY_ASSIGNED' ||
+      messageType === 'ENTITY_UNASSIGNED'
     ) {
       if (
         thingModelUrl === undefined ||
@@ -61,13 +65,13 @@ app.post('/', async (req, res) => {
         thingMetadata
       })
 
-      await updateThing(tenantName, thingDescription)
+      await updateThing(tenantName, customerTitle, thingDescription)
     } else if (messageType === 'ATTRIBUTES_DELETED') {
       if (deviceId === undefined || tenantName === undefined) {
         return res.status(400).send('Bad Request')
       }
 
-      await deleteThing(tenantName, `uri:uuid:${deviceId}`)
+      await deleteThing(tenantName, customerTitle, `uri:uuid:${deviceId}`)
     } else if (messageType === 'ENTITY_DELETED') {
       if (tenantName === undefined) {
         return res.status(400).send('Bad Request')
