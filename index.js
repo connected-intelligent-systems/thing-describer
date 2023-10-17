@@ -38,7 +38,6 @@ app.post('/', async (req, res) => {
     return res.status(400).send('Bad Request')
   }
 
-  // http://thing-describer.core.svc.cluster.local:3000/
   try {
     if (
       messageType === 'ATTRIBUTES_UPDATED' ||
