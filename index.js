@@ -58,9 +58,7 @@ app.post('/', async (req, res) => {
       const thingDescription = await generateThingDescription({
         deviceId,
         thingModelUrl,
-        tenantName,
         credentials,
-        credentialsType,
         thingMetadata
       })
 
