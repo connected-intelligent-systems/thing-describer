@@ -12,10 +12,24 @@ const app = express()
 
 app.use(express.json())
 
+/**
+ * Health endpoint to indicate if the service is up and running
+ *
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
 app.get('/', (req, res) => {
   res.send('OK')
 })
 
+/**
+ * This endpoint is called from the thingsboard rule engine and contains several metadata to create or delete
+ * a valid Thing Description in the thing registry. Endpoints are automatically added to
+ * properties as well as Thing History actions.
+ *
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
 app.post('/', async (req, res) => {
   const thingModelUrl =
     req.body['cs_thing-model'] ||
@@ -45,6 +59,7 @@ app.post('/', async (req, res) => {
       messageType === 'ENTITY_ASSIGNED' ||
       messageType === 'ENTITY_UNASSIGNED'
     ) {
+      // if the devices attributes where updated or the entity was assigned/unassigned update the thing description
       if (
         thingModelUrl === undefined ||
         deviceId === undefined ||
@@ -64,12 +79,14 @@ app.post('/', async (req, res) => {
 
       await updateThing(tenantName, customerTitle, thingDescription)
     } else if (messageType === 'ATTRIBUTES_DELETED') {
+      // if thing-model attribute was deleted, delete thing from registry
       if (deviceId === undefined || tenantName === undefined) {
         return res.status(400).send('Bad Request')
       }
 
-      await deleteThing(tenantName, customerTitle, `uri:uuid:${deviceId}`)
+      await deleteThing(tenantName, `uri:uuid:${deviceId}`)
     } else if (messageType === 'ENTITY_DELETED') {
+      // if device was deleted, delete thing from registry
       if (tenantName === undefined) {
         return res.status(400).send('Bad Request')
       }
@@ -79,7 +96,7 @@ app.post('/', async (req, res) => {
       }
     }
 
-    res.send('OK')
+    return res.send('OK')
   } catch (e) {
     console.error(e)
     return res.status(500).send('Internal Server Error')
