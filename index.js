@@ -1,108 +1,127 @@
 'use strict'
 
-const express = require('express')
 const env = require('env-var')
+const { Kafka } = require('kafkajs')
 const {
   generateThingDescription
 } = require('./lib/thing_description_template')
 const { updateThing, deleteThing } = require('./lib/thing_registry')
 
-const Port = env.get('PORT').default('3000').required(true).asPortNumber()
-const app = express()
+const KafkaClientId = env.get('KAFKA_CLIENT_ID').required().asString()
+const KafkaBrokers = env.get('KAFKA_BROKERS').required().asArray()
+const KafkaGroupId = env.get('KAFKA_GROUP_ID').required().asString()
+const KafkaTopic = env.get('KAFKA_TOPIC').required().asString()
 
-app.use(express.json())
-
-/**
- * Health endpoint to indicate if the service is up and running
- *
- * @param {express.Request} req
- * @param {express.Response} res
- */
-app.get('/', (req, res) => {
-  res.send('OK')
-})
-
-/**
- * This endpoint is called from the thingsboard rule engine and contains several metadata to create or delete
- * a valid Thing Description in the thing registry. Endpoints are automatically added to
- * properties as well as Thing History actions.
- *
- * @param {express.Request} req
- * @param {express.Response} res
- */
-app.post('/', async (req, res) => {
-  const thingModelUrl =
-    req.body['cs_thing-model'] ||
-    req.body['ss_thing-model'] ||
-    req.body['shared_thing-model']
-  const thingMetadata =
-    req.body['cs_thing-metadata'] ||
-    req.body['ss_thing-metadata'] ||
-    req.body['shared_thing-metadata'] ||
-    {}
-  const deviceId = req.headers['x-device-id']
-  const tenantName = req.headers['x-tenant-name']
-  const credentials = req.headers['x-credentials']
-  const credentialsType = req.headers['x-credentials-type']
-  const messageType = req.headers['x-message-type']
-  // const customerId = req.headers['x-customer-id']
-  const customerTitle = req.headers['x-customer-title'] || undefined
-
-  if (messageType === undefined) {
-    return res.status(400).send('Bad Request')
+function decodeHeaders (headers) {
+  const decodedHeaders = {}
+  for (const key in headers) {
+    const valueBuffer = headers[key]
+    decodedHeaders[key] = valueBuffer ? valueBuffer.toString() : null
   }
+  return decodedHeaders
+}
 
-  try {
-    if (
-      messageType === 'ATTRIBUTES_UPDATED' ||
-      messageType === 'POST_ATTRIBUTES_REQUEST' ||
-      messageType === 'ENTITY_ASSIGNED' ||
-      messageType === 'ENTITY_UNASSIGNED'
-    ) {
-      // if the devices attributes where updated or the entity was assigned/unassigned update the thing description
-      if (
-        thingModelUrl === undefined ||
-        deviceId === undefined ||
-        tenantName === undefined ||
-        credentials === undefined ||
-        credentialsType === undefined
-      ) {
-        return res.status(400).send('Bad Request')
-      }
+async function run () {
+  const kafka = new Kafka({
+    clientId: KafkaClientId,
+    brokers: KafkaBrokers
+  })
 
-      const thingDescription = await generateThingDescription({
-        deviceId,
-        thingModelUrl,
-        credentials,
-        thingMetadata
-      })
+  const consumer = kafka.consumer({ groupId: KafkaGroupId })
 
-      await updateThing(tenantName, customerTitle, thingDescription)
-    } else if (messageType === 'ATTRIBUTES_DELETED') {
-      // if thing-model attribute was deleted, delete thing from registry
-      if (deviceId === undefined || tenantName === undefined) {
-        return res.status(400).send('Bad Request')
-      }
+  await consumer.connect()
+  await consumer.subscribe({ topic: KafkaTopic, fromBeginning: true })
 
-      await deleteThing(tenantName, `uri:uuid:${deviceId}`)
-    } else if (messageType === 'ENTITY_DELETED') {
-      // if device was deleted, delete thing from registry
-      if (tenantName === undefined) {
-        return res.status(400).send('Bad Request')
-      }
+  await consumer.run({
+    eachMessage: async ({ message }) => {
+      try {
+        const body = JSON.parse(message.value.toString())
+        const thingModelUrl =
+          body['cs_thing-model'] ||
+          body['ss_thing-model'] ||
+          body['shared_thing-model']
+        const thingMetadata =
+          body['cs_thing-metadata'] ||
+          body['ss_thing-metadata'] ||
+          body['shared_thing-metadata'] ||
+          {}
+        const headers = decodeHeaders(message.headers)
+        const deviceId = headers.tb_msg_md_originatorId
+        const tenantName = headers.tb_msg_md_tenant_title
+        const credentials = headers.tb_msg_md_credentials
+        const credentialsType = headers.tb_msg_md_credentialsType
+        const messageType = headers.tb_msg_md_messageType
+        const customerTitle = headers.tb_msg_md_customer_title || undefined
 
-      if (req.body.id.entityType === 'DEVICE') {
-        await deleteThing(tenantName, `uri:uuid:${req.body.id.id}`)
+        if (messageType === undefined) {
+          console.warn(
+            'missing message type. ignoring message: ',
+            message.value.toString()
+          )
+          return
+        }
+
+        if (
+          messageType === 'ATTRIBUTES_UPDATED' ||
+          messageType === 'POST_ATTRIBUTES_REQUEST' ||
+          messageType === 'ENTITY_ASSIGNED' ||
+          messageType === 'ENTITY_UNASSIGNED'
+        ) {
+          // if the devices attributes where updated or the entity was assigned/unassigned update the thing description
+          if (
+            thingModelUrl === undefined ||
+            deviceId === undefined ||
+            tenantName === undefined ||
+            credentials === undefined ||
+            credentialsType === undefined
+          ) {
+            console.warn(
+              'missing property to generate thing description. ignoring message: ',
+              message.value.toString()
+            )
+            return
+          }
+
+          const thingDescription = await generateThingDescription({
+            deviceId,
+            thingModelUrl,
+            credentials,
+            thingMetadata
+          })
+          await updateThing(tenantName, customerTitle, thingDescription)
+        } else if (messageType === 'ATTRIBUTES_DELETED') {
+          // if thing-model attribute was deleted, delete thing from registry
+          if (deviceId === undefined || tenantName === undefined) {
+            console.warn(
+              'missing property to delete thing description. ignoring message: ',
+              message.value.toString()
+            )
+            return
+          }
+
+          await deleteThing(tenantName, `uri:uuid:${deviceId}`)
+        } else if (messageType === 'ENTITY_DELETED') {
+          // if device was deleted, delete thing from registry
+          if (tenantName === undefined) {
+            console.warn(
+              'missing property to delete thing description. ignoring message: ',
+              message.value.toString()
+            )
+            return
+          }
+
+          if (body.id.entityType === 'DEVICE') {
+            await deleteThing(tenantName, `uri:uuid:${body.id.id}`)
+          }
+        }
+        console.log('Successfully processed message', message.value.toString())
+      } catch (e) {
+        console.error('Error while processing message. Ignoring.', message, e)
       }
     }
+  })
+}
 
-    return res.send('OK')
-  } catch (e) {
-    console.error(e)
-    return res.status(500).send('Internal Server Error')
-  }
-})
-
-app.listen(Port, () => {
-  console.log(`Listening on port ${Port}`)
-})
+run()
+  .then(() => console.log('kafka running'))
+  .catch((e) => console.error(e))
