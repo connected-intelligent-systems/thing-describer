@@ -1,6 +1,6 @@
 {
   "name": "thing-describer",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -12,10 +12,14 @@
   },
   "author": "Sebastian Alberternst <sebastian.alberternst@dfki.de>",
   "license": "MIT",
+  "bin": {
+    "rebuild-tds": "./bin/rebuild.js"
+  },
   "dependencies": {
     "@node-wot/td-tools": "^0.8.8",
     "env-var": "^7.4.1",
-    "kafkajs": "^2.2.4"
+    "kafkajs": "^2.2.4",
+    "yargs": "^17.7.2"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
