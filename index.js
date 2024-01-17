@@ -24,10 +24,7 @@ function decodeHeaders (headers) {
 async function run () {
   const kafka = new Kafka({
     clientId: KafkaClientId,
-    brokers: KafkaBrokers,
-    sasl: {
-      mechanism: 'plain'
-    }
+    brokers: KafkaBrokers
   })
 
   const consumer = kafka.consumer({ groupId: KafkaGroupId })
