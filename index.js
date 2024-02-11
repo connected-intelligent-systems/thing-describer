@@ -99,7 +99,7 @@ async function run () {
             return
           }
 
-          await deleteThing(tenantName, customerTitle, `uri:uuid:${deviceId}`)
+          await deleteThing(tenantName, `uri:uuid:${deviceId}`)
         } else if (messageType === 'ENTITY_DELETED') {
           // if device was deleted, delete thing from registry
           if (tenantName === undefined) {
@@ -111,7 +111,7 @@ async function run () {
           }
 
           if (body.id.entityType === 'DEVICE') {
-            await deleteThing(tenantName, customerTitle, `uri:uuid:${body.id.id}`)
+            await deleteThing(tenantName, `uri:uuid:${body.id.id}`)
           }
         }
         console.log('Successfully processed message', message.value.toString())
