@@ -17,4 +17,8 @@ COPY ./lib /app/lib
 
 EXPOSE 3000
 
+USER node
+
+HEALTHCHECK CMD exit 0
+
 CMD ["/app/run.sh"]
