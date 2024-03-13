@@ -1,10 +1,10 @@
 # Thing Describer
 
-The Thing Describer streamlines the creation of Thing Descriptions in the Thing Registry for devices on the Thingsboard platform using standardized Thing Models. This allows developers to efficiently produce detailed and accurate descriptions of their devices, saving time and effort. These descriptions provide a comprehensive overview of the device's capabilities and operations, enhancing compatibility with other applications and services.
+The Thing Describer streamlines the creation of Thing Descriptions in the Thing Registry for devices on the ThingsBoard platform using standardized Thing Models. This allows developers to efficiently produce detailed and accurate descriptions of their devices, saving time and effort. These descriptions provide a comprehensive overview of the device's capabilities and operations, enhancing compatibility with other applications and services.
 
 ## Generating Thing Descriptions
 
-To generate a Thing Description, you must employ specific attributes applicable to client, server, or a hybrid of both within Thingsboard. The essential attributes to utilize include:
+To generate a Thing Description, you must employ specific attributes applicable to client, server, or a hybrid of both within ThingsBoard. The essential attributes to utilize include:
 
 * `thing-model`: This attribute serves as a reference link to a [W3C Thing Model](https://www.w3.org/TR/wot-thing-description11/). It ensures that the description adheres to a standardized format, enhancing device compatibility across different platforms and services.
 * `thing-metadata`: This attribute allows for the inclusion of additional metadata such as the device’s description, title, and other relevant information that aids in the comprehensive documentation of the IoT device. Metadata enriches the Thing Description, providing users and services with more context about the device's capabilities and features.
