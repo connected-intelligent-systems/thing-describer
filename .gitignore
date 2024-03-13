@@ -5,3 +5,4 @@ node_modules
 .vscode
 .nyc_output
 k8s
+bin

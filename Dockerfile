@@ -1,8 +1,6 @@
-FROM node:20
+FROM node:20.11.0-alpine3.18
 
-RUN apt-get update && apt-get install -y \
-  dumb-init \
-  && rm -rf /var/lib/apt/lists/*
+RUN apk --no-cache add curl
 
 WORKDIR /app
 RUN npm install -g forever
@@ -19,4 +17,4 @@ COPY ./lib /app/lib
 
 EXPOSE 3000
 
-CMD ["dumb-init", "./run.sh"]
+CMD ["/app/run.sh"]

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "npm run start:production",
     "start:production": "cross-env NODE_ENV=production node .",
-    "start:development": "cross-env NODE_ENV=development forever --killSignal=SIGTERM --minUptime 1000 --spinSleepTime 1000 -c 'node --inspect=0.0.0.0:9229' -w index.js .",
+    "start:development": "cross-env NODE_ENV=development node --inspect=0.0.0.0:9229 --watch .",
     "lint": "prettier --write '**/*.js' && standard --fix '**/*.js'",
     "depcheck": "depcheck"
   },
@@ -24,7 +24,6 @@
   "devDependencies": {
     "cross-env": "^7.0.3",
     "depcheck": "^1.4.6",
-    "forever": "^4.0.3",
     "prettier": "^3.0.3",
     "standard": "^17.1.0"
   }
