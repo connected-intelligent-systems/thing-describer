@@ -9,6 +9,21 @@ To generate a Thing Description, you must employ specific attributes applicable 
 * `thing-model`: This attribute serves as a reference link to a [W3C Thing Model](https://www.w3.org/TR/wot-thing-description11/). It ensures that the description adheres to a standardized format, enhancing device compatibility across different platforms and services.
 * `thing-metadata`: This attribute allows for the inclusion of additional metadata such as the device’s description, title, and other relevant information that aids in the comprehensive documentation of the IoT device. Metadata enriches the Thing Description, providing users and services with more context about the device's capabilities and features.
 
+## How to run this image
+
+```shell
+docker run -it --rm --name thing-describer \
+-e THINGSBOARD_HTTP_ENDPOINT='http://thingsboard' \
+-e THINGSBOARD_MQTT_ENDPOINT='mqtt://thingsboard:1883' \
+-e THINGSBOARD_HISTORY_ENDPOINT='http://thingsboard/api/history' \
+-e THING_REGISTRY_URL='http://thing-registry:8080' \
+-e KAFKA_CLIENT_ID='thing-describer' \
+-e KAFKA_BROKERS='kafka-headless:9092' \
+-e KAFKA_GROUP_ID='thing-describer-group-1' \
+-e KAFKA_TOPIC='thing-describer' \
+registry.fsn.iotx.materna.work/registry/public/thing-describer:latest
+``` 
+
 ## Environment Variables
 
 The following environment variables can be used to configure the Thing Describer:
