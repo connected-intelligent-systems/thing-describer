@@ -5,13 +5,25 @@ const { Kafka } = require('kafkajs')
 const {
   generateThingDescription
 } = require('./lib/thing_description_template')
-const { updateThing, deleteThing } = require('./lib/thing_registry')
+const {
+  createThing,
+  updateThing,
+  deleteThing,
+  getThing,
+  assignThing
+} = require('./lib/thing_registry')
 
 const KafkaClientId = env.get('KAFKA_CLIENT_ID').required().asString()
 const KafkaBrokers = env.get('KAFKA_BROKERS').required().asArray()
 const KafkaGroupId = env.get('KAFKA_GROUP_ID').required().asString()
 const KafkaTopic = env.get('KAFKA_TOPIC').required().asString()
 
+/**
+ * Decodes Kafka headers.
+ *
+ * @param {Object} headers - The Kafka headers to decode.
+ * @returns {Object} - The decoded headers.
+ */
 function decodeHeaders (headers) {
   const decodedHeaders = {}
   for (const key in headers) {
@@ -88,7 +100,20 @@ async function run () {
             credentials,
             thingMetadata
           })
-          await updateThing(tenantName, customerTitle, thingDescription)
+
+          const thing = await getThing(tenantName, thingDescription.id)
+          if (thing) {
+            await updateThing(tenantName, thingDescription)
+          } else {
+            await createThing(tenantName, customerTitle, thingDescription)
+          }
+
+          if (
+            messageType === 'ENTITY_ASSIGNED' ||
+            messageType === 'ENTITY_UNASSIGNED'
+          ) {
+            await assignThing(thingDescription.id, tenantName, customerTitle)
+          }
         } else if (messageType === 'ATTRIBUTES_DELETED') {
           // if thing-model attribute was deleted, delete thing from registry
           if (deviceId === undefined || tenantName === undefined) {
