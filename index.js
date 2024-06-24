@@ -142,14 +142,18 @@ async function run () {
         }
 
         console.log('Successfully processed message', message.value.toString())
-        if(credentials) {
-          await sendSyncStatus(credentials, 'SUCCESS', 'Successfully synced device')
+        if (credentials) {
+          await sendSyncStatus(
+            credentials,
+            'SUCCESS',
+            'Successfully synced device'
+          )
         }
       } catch (e) {
         console.error('Error while processing message. Ignoring.', message, e)
         const headers = decodeHeaders(message.headers)
         const credentials = headers.tb_msg_md_credentials
-        if(credentials) {
+        if (credentials) {
           await sendSyncStatus(credentials, 'ERROR', e.message)
         }
       }
