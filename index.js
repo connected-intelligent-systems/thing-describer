@@ -40,8 +40,13 @@ async function run () {
     brokers: KafkaBrokers
   })
 
-  const consumer = kafka.consumer({ groupId: KafkaGroupId })
+  const admin = kafka.admin()
+  await admin.connect()
+  await admin.createTopics({
+    topics: [{ topic: KafkaTopic }]
+  })
 
+  const consumer = kafka.consumer({ groupId: KafkaGroupId })
   await consumer.connect()
   await consumer.subscribe({ topic: KafkaTopic, fromBeginning: true })
 
@@ -50,13 +55,13 @@ async function run () {
       try {
         const body = JSON.parse(message.value.toString())
         const thingModelUrl =
-          body['cs_thing-model'] ||
           body['ss_thing-model'] ||
-          body['shared_thing-model']
+          body['shared_thing-model'] ||
+          body['cs_thing-model']
         const thingMetadata =
-          body['cs_thing-metadata'] ||
           body['ss_thing-metadata'] ||
           body['shared_thing-metadata'] ||
+          body['cs_thing-metadata'] ||
           {}
         const headers = decodeHeaders(message.headers)
         const deviceId = headers.tb_msg_md_originatorId
