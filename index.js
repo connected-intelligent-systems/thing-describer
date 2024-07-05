@@ -65,11 +65,11 @@ async function run () {
           {}
         const headers = decodeHeaders(message.headers)
         const deviceId = headers.tb_msg_md_originatorId
-        const tenantName = headers.tb_msg_md_tenant_title
+        const tenantId = headers.tb_msg_md_tenant_id
         const credentials = headers.tb_msg_md_credentials
         const credentialsType = headers.tb_msg_md_credentialsType
         const messageType = headers.tb_msg_md_messageType
-        const customerTitle = headers.tb_msg_md_customer_title || undefined
+        const customerId = headers.tb_msg_md_customer_id || undefined
 
         if (messageType === undefined) {
           console.warn(
@@ -89,7 +89,7 @@ async function run () {
           if (
             thingModelUrl === undefined ||
             deviceId === undefined ||
-            tenantName === undefined ||
+            tenantId === undefined ||
             credentials === undefined ||
             credentialsType === undefined
           ) {
@@ -107,22 +107,22 @@ async function run () {
             thingMetadata
           })
 
-          const thing = await getThing(tenantName, thingDescription.id)
+          const thing = await getThing(tenantId, thingDescription.id)
           if (thing) {
-            await updateThing(tenantName, thingDescription)
+            await updateThing(tenantId, thingDescription)
           } else {
-            await createThing(tenantName, customerTitle, thingDescription)
+            await createThing(tenantId, customerId, thingDescription)
           }
 
           if (
             messageType === 'ENTITY_ASSIGNED' ||
             messageType === 'ENTITY_UNASSIGNED'
           ) {
-            await assignThing(thingDescription.id, tenantName, customerTitle)
+            await assignThing(thingDescription.id, tenantId, customerId)
           }
         } else if (messageType === 'ATTRIBUTES_DELETED') {
           // if thing-model attribute was deleted, delete thing from registry
-          if (deviceId === undefined || tenantName === undefined) {
+          if (deviceId === undefined || tenantId === undefined) {
             console.warn(
               'missing property to delete thing description. ignoring message: ',
               message.value.toString()
@@ -130,10 +130,10 @@ async function run () {
             return
           }
 
-          await deleteThing(tenantName, `uri:uuid:${deviceId}`)
+          await deleteThing(tenantId, `uri:uuid:${deviceId}`)
         } else if (messageType === 'ENTITY_DELETED') {
           // if device was deleted, delete thing from registry
-          if (tenantName === undefined) {
+          if (tenantId === undefined) {
             console.warn(
               'missing property to delete thing description. ignoring message: ',
               message.value.toString()
@@ -142,7 +142,7 @@ async function run () {
           }
 
           if (body.id.entityType === 'DEVICE') {
-            await deleteThing(tenantName, `uri:uuid:${body.id.id}`)
+            await deleteThing(tenantId, `uri:uuid:${body.id.id}`)
           }
         }
 
