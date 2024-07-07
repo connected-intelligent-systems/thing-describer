@@ -69,7 +69,7 @@ async function run () {
         const credentials = headers.tb_msg_md_credentials
         const credentialsType = headers.tb_msg_md_credentialsType
         const messageType = headers.tb_msg_md_messageType
-        const customerId = headers.tb_msg_md_customer_id || undefined
+        const customerId = headers.tb_msg_md_customer_id
 
         if (messageType === undefined) {
           console.warn(
@@ -114,12 +114,7 @@ async function run () {
             await createThing(tenantId, customerId, thingDescription)
           }
 
-          if (
-            messageType === 'ENTITY_ASSIGNED' ||
-            messageType === 'ENTITY_UNASSIGNED'
-          ) {
-            await assignThing(thingDescription.id, tenantId, customerId)
-          }
+          await assignThing(thingDescription.id, tenantId, customerId)
         } else if (messageType === 'ATTRIBUTES_DELETED') {
           // if thing-model attribute was deleted, delete thing from registry
           if (deviceId === undefined || tenantId === undefined) {
