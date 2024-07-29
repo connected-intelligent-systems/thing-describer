@@ -57,11 +57,13 @@ async function run () {
         const thingModelUrl =
           body['ss_thing-model'] ||
           body['shared_thing-model'] ||
-          body['cs_thing-model']
+          body['cs_thing-model'] ||
+          body['thing-model']
         const thingMetadata =
           body['ss_thing-metadata'] ||
           body['shared_thing-metadata'] ||
           body['cs_thing-metadata'] ||
+          body['thing-metadata'] ||
           {}
         const headers = decodeHeaders(message.headers)
         const deviceId = headers.tb_msg_md_originatorId
